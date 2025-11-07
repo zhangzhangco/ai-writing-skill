@@ -1,5 +1,17 @@
 /**
- * AI协同写作系统助手Skill
+ * AI协同写作系统助手Skill - Claude Skill模块包
+ *
+ * ⚠️ 重要说明：
+ * 这是一个Skill模块包，不是可执行程序！
+ * 请勿直接运行：node index.ts 或 ts-node index.ts
+ *
+ * 使用方式：
+ * // 1. 在Claude中导入使用
+ * import { aiWritingSkill } from './index';
+ *
+ * // 2. 在其他Node.js项目中使用
+ * import { aiWritingSkill } from 'ai-writing-skill';
+ *
  * 基于三层架构的科技写作工作流
  * 核心能力：降AI味、提升真实感、可追踪、可复用
  */

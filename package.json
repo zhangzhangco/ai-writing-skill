@@ -3,8 +3,13 @@
   "version": "1.0.0",
   "description": "通用AI协同写作系统助手 - 基于三层架构的写作工作流框架，支持所有领域（技术、商业、学术、创意、工作等），通过降AI味引擎确保内容自然真实",
   "main": "index.ts",
-  "scripts": {},
   "type": "module",
+  "scripts": {
+    "import": "echo '这是一个Claude Skill包，需要通过 import 导入使用'",
+    "type-check": "tsc --noEmit",
+    "test": "echo 'Skill包无需运行测试，直接被导入使用'"
+  },
+  "usage": "import { aiWritingSkill } from 'ai-writing-skill'",
   "keywords": [
     "claude",
     "skill",

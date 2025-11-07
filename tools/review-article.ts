@@ -4,6 +4,7 @@
  */
 
 import { Tool } from '@anthropic-ai/claude-code-sdk';
+import { fluencyOptimizerTool } from './fluency-optimizer';
 
 export const reviewArticleTool: Tool = {
   name: 'review-article',
@@ -18,6 +19,17 @@ export const reviewArticleTool: Tool = {
         required: true
       },
       review_level: {
+        type: 'string',
+        enum: ['basic', 'standard', 'deep'],
+        description: '审校级别：basic(基础)、standard(标准)、deep(深度)',
+        default: 'standard'
+      },
+      enable_fluency_optimization: {
+        type: 'boolean',
+        description: '是否启用流畅度优化（自动调用fluency-optimizer）',
+        default: true
+      },
+      workspace_type: {
         type: 'string',
         enum: ['quick', 'standard', 'deep'],
         description: '审校深度：quick(快速)、standard(标准)、deep(深度)',
@@ -43,7 +55,7 @@ export const reviewArticleTool: Tool = {
   },
 
   handler: async (input, utils) => {
-    const { review_level, workspace_type } = input;
+    const { review_level, workspace_type, enable_fluency_optimization = true } = input;
 
     // 审校深度定义
     const reviewLevels = {
@@ -326,6 +338,23 @@ export const reviewArticleTool: Tool = {
       }
     };
 
+    // ⭐ 流畅度优化（如果启用）
+    let fluencyOptimization = null;
+    if (enable_fluency_optimization) {
+      utils.logger.info('✨ 执行流畅度优化...');
+      fluencyOptimization = await fluencyOptimizerTool.handler({
+        article_content: input.article_content,
+        optimization_level: review_level,
+        target_audience: 'general',
+        focus_areas: [
+          'paragraph_transition',
+          'sentence_length',
+          'info_density',
+          'rhythm_control'
+        ]
+      }, utils);
+    }
+
     return {
       status: 'ready_to_execute',
       review_config: {
@@ -335,7 +364,20 @@ export const reviewArticleTool: Tool = {
         depth: level.depth,
         focus_areas: level.focus,
         workspace_type: workspace_type,
-        ai_tone_filter: input.use_ai_tone_filter
+        ai_tone_filter: input.use_ai_tone_filter,
+        fluency_optimization_enabled: enable_fluency_optimization
+      },
+
+      // ⭐ 流畅度优化结果
+      fluency_optimization: fluencyOptimization ? {
+        status: 'completed',
+        optimization_level: review_level,
+        metrics: fluencyOptimization.metrics || {},
+        optimized_content: fluencyOptimization.optimized_content,
+        improvements: fluencyOptimization.improvements || []
+      } : {
+        status: 'disabled',
+        reason: 'enable_fluency_optimization = false'
       },
 
       // AI腔检测模式

@@ -58,6 +58,23 @@ export const createBriefTool: Tool = {
       deadline: {
         type: 'string',
         description: '期望完成时间（可选）'
+      },
+      // ⭐ 新增：强制检查前置步骤
+      prerequisite_check: {
+        type: 'object',
+        description: '前置步骤检查（用于自动验证）',
+        properties: {
+          has_research: {
+            type: 'boolean',
+            description: '是否已完成网络研究（web-research）',
+            default: false
+          },
+          has_materials: {
+            type: 'boolean',
+            description: '是否已获取个人素材（manage-corpus）',
+            default: false
+          }
+        }
       }
     }
   },
@@ -65,6 +82,42 @@ export const createBriefTool: Tool = {
   handler: async (input, utils) => {
     const briefId = `brief_${Date.now()}`;
     const currentDate = new Date().toISOString().split('T')[0];
+
+    // ⚠️ 强验证：检查前置步骤
+    if (input.prerequisite_check) {
+      const { has_research, has_materials } = input.prerequisite_check;
+
+      if (!has_materials) {
+        throw new Error(`
+❌ 错误：未完成前置步骤
+
+📋 当前步骤：创建写作Brief
+⚠️ 缺少步骤：搜索个人素材（manage-corpus）
+
+🔄 正确流程：
+1. ✅ web-research（已完成）
+2. ❌ manage-corpus（未完成）← 您在这里
+3. ⏳ create-brief（当前）
+
+📌 必须先执行：
+const materials = await manageCorpusTool.handler({
+  action: 'search',
+  keywords: '你的主题关键词',
+  material_type: '观点'
+});
+
+然后将结果传入 create-brief：
+const brief = await createBriefTool.handler({
+  topic: '你的主题',
+  target_audience: '目标读者',
+  prerequisite_check: {
+    has_research: true,
+    has_materials: true  // 确保为 true
+  }
+});
+        `);
+      }
+    }
 
     // 生成Brief内容
     const briefContent = `# 写作Brief

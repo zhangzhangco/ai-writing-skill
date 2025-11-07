@@ -564,25 +564,22 @@ async function executeAutoNewArticleWorkflow(params: {
     });
     executionLog.steps_completed.push({ step: 6, name: 'article_generation', status: 'completed' });
 
-    // 步骤8: 自动四遍审校
-    utils.logger.info('🔍 步骤7/9: 执行四遍审校...');
+    // 步骤5: 自动三遍审校 + 流畅度优化（一体化）
+    utils.logger.info('🔍 步骤5/6: 执行三遍审校 + 流畅度优化...');
     const review = await reviewArticleTool.handler({
       article_content: articleContent,
-      review_level: 'standard'
+      review_level: 'standard',
+      enable_fluency_optimization: true  // 强制开启流畅度优化
     }, utils);
-    executionLog.steps_completed.push({ step: 7, name: 'review-article', status: 'completed' });
+    executionLog.steps_completed.push({
+      step: 5,
+      name: 'review-article + fluency-optimization',
+      status: 'completed',
+      includes_fluency_optimization: true
+    });
 
-    // 步骤9: 自动流畅度优化
-    utils.logger.info('✨ 步骤8/9: 优化文章流畅度...');
-    const fluency = await fluencyOptimizerTool.handler({
-      article_content: review.optimized_content,
-      optimization_level: 'standard',
-      target_audience
-    }, utils);
-    executionLog.steps_completed.push({ step: 8, name: 'fluency-optimizer', status: 'completed' });
-
-    // 步骤10: 自动生成报告
-    utils.logger.info('📊 步骤9/9: 生成质量报告...');
+    // 步骤6: 自动生成报告
+    utils.logger.info('📊 步骤6/6: 生成质量报告...');
     const report = await generateReportTool.handler({
       report_type: 'quality-metrics',
       article_topic: topic
