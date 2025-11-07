@@ -1,0 +1,29 @@
+{
+  "name": "ai-writing-skill",
+  "version": "1.0.0",
+  "description": "通用AI协同写作系统助手 - 基于三层架构的写作工作流框架，支持所有领域（技术、商业、学术、创意、工作等），通过降AI味引擎确保内容自然真实",
+  "main": "index.ts",
+  "scripts": {},
+  "type": "module",
+  "keywords": [
+    "claude",
+    "skill",
+    "writing",
+    "ai",
+    "workflow",
+    "productivity",
+    "通用写作",
+    "AI工作流",
+    "多领域写作",
+    "内容创作",
+    "写作框架",
+    "技术写作",
+    "商业分析",
+    "学术论文",
+    "审校",
+    "素材库"
+  ],
+  "author": "Claude",
+  "license": "MIT",
+  "dependencies": {}
+}

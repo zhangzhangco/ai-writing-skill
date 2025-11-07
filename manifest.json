@@ -1,0 +1,40 @@
+{
+  "name": "ai-writing-assistant",
+  "description": "通用AI协同写作系统助手 - 基于三层架构的写作工作流框架，支持所有领域（技术、商业、学术、创意、工作等），提供可控、可复用、可追踪的写作能力",
+  "version": "1.0.0",
+  "author": "Claude",
+  "icon": "📝",
+  "categories": ["writing", "productivity", "content", "research", "analysis"],
+  "installation_type": "standalone",
+  "readme": "README.md",
+  "keywords": ["通用写作", "AI工作流", "多领域写作", "内容创作", "写作框架", "技术写作", "商业分析", "学术论文", "审校", "素材库"],
+  "platform": "claude",
+  "compatibility": "claude-3-sonnet-20240229",
+  "main": "index.ts",
+  "tools": [
+    "init-workspace",
+    "web-research",
+    "generate-topics",
+    "create-brief",
+    "run-workflow",
+    "manage-corpus",
+    "review-article",
+    "fluency-optimizer",
+    "generate-report"
+  ],
+  "requirements": {
+    "claude_version": ">=3.0",
+    "permissions": ["file_read", "file_write", "web_search"]
+  },
+  "documentation": {
+    "usage": "./USAGE.md",
+    "examples": "./examples/",
+    "api": "./API.md",
+    "deployment": "./DEPLOYMENT.md"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/anthropic/ai-writing-skill"
+  }
+}
