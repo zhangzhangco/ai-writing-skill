@@ -2,6 +2,7 @@
 
 # ai-writing-skill 一键安装脚本
 # 使用方法: curl -fsSL https://raw.githubusercontent.com/zhangzhangco/ai-writing-skill/main/install.sh | bash
+# 强制覆盖: curl -fsSL https://raw.githubusercontent.com/zhangzhangco/ai-writing-skill/main/install.sh | bash -s -- --force
 
 set -e
 
@@ -33,6 +34,12 @@ print_info() {
     echo -e "${YELLOW}ℹ️  $1${NC}"
 }
 
+# 检查参数
+FORCE_OVERWRITE=false
+if [[ "$1" == "--force" ]] || [[ "$2" == "--force" ]]; then
+    FORCE_OVERWRITE=true
+fi
+
 print_header
 
 # 检查 Git
@@ -59,15 +66,38 @@ print_success "目录已创建: $SKILLS_DIR"
 
 # 检查目录是否为空
 if [ -d "$SKILL_DIR" ]; then
-    print_info "检测到已存在的 Skill 目录"
-    read -p "是否覆盖安装？(y/N): " -n 1 -r
-    echo
-    if [[ $REPLY =~ ^[Yy]$ ]]; then
-        print_info "删除旧版本..."
+    if [ "$FORCE_OVERWRITE" = true ]; then
+        print_info "强制覆盖模式启用，删除旧版本..."
         rm -rf "$SKILL_DIR"
+        print_success "旧版本已删除"
     else
-        print_info "跳过安装"
-        exit 0
+        print_info "检测到已存在的 Skill 目录"
+        # 尝试非交互式输入
+        if [ -t 0 ]; then
+            # 终端模式，可以交互
+            read -p "是否覆盖安装？(y/N): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                print_info "删除旧版本..."
+                rm -rf "$SKILL_DIR"
+            else
+                print_info "跳过安装"
+                exit 0
+            fi
+        else
+            # 非终端模式（如管道），自动跳过
+            print_info "检测到非交互模式"
+            read -p "是否覆盖安装？(y/N): " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                print_info "删除旧版本..."
+                rm -rf "$SKILL_DIR"
+            else
+                print_info "跳过安装"
+                print_info "如需强制覆盖，请使用: curl -fsSL https://raw.githubusercontent.com/zhangzhangco/ai-writing-skill/main/install.sh | bash -s -- --force"
+                exit 0
+            fi
+        fi
     fi
 fi
 
@@ -141,3 +171,6 @@ echo -e "==================================${NC}"
 echo -e "${YELLOW}Skill 支持热加载！${NC}"
 echo "在 Claude Code 中执行 /reload-skills 即可立即生效，无需重启！"
 echo
+if [ "$FORCE_OVERWRITE" = true ]; then
+    echo -e "${GREEN}✅ 强制覆盖安装完成！${NC}"
+fi
