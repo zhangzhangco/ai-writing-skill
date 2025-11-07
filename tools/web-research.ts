@@ -190,7 +190,7 @@ export const webResearchTool: Tool = {
   }
 };
 
-export default webResearchTool;
+// 注意：web-research使用export const方式导出
 
 /**
  * 使用MCP进行搜索 - 指导函数

@@ -177,4 +177,4 @@ export const generateTopicsTool: Tool = {
   }
 };
 
-export default generateTopicsTool;
+// 注意：generate-topics使用export const方式导出

@@ -4,6 +4,14 @@
  */
 
 import { Tool } from '@anthropic-ai/claude-code-sdk';
+import { initWorkspaceTool } from './init-workspace';
+import { webResearchTool } from './web-research';
+import { generateTopicsTool } from './generate-topics';
+import { manageCorpusTool } from './manage-corpus';
+import { createBriefTool } from './create-brief';
+import { reviewArticleTool } from './review-article';
+import { fluencyOptimizerTool } from './fluency-optimizer';
+import { generateReportTool } from './generate-report';
 
 export const runWorkflowTool: Tool = {
   name: 'run-workflow',
@@ -163,87 +171,92 @@ const workflow = await runWorkflowTool.handler({
     // 工作流定义
     const workflows = {
       new_article: {
-        name: '新文章9步流程',
-        description: '适用于完整新文章创作，包含从Brief到成稿的全流程',
+        name: '新文章自动流程',
+        description: '适用于完整新文章创作，自动调用9个工具完成全流程',
         steps: [
           {
             step: 1,
-            name: '保存Brief',
-            description: '将Brief存档至 /5_briefs/',
-            time: '5分钟',
-            critical: false
+            name: '初始化工作区',
+            description: '根据工作区类型加载对应规则和目录结构',
+            time: '1分钟',
+            critical: false,
+            tool: 'init-workspace'
           },
           {
             step: 2,
-            name: '信息搜索与知识库建立',
-            description: '检索权威资料，建立知识库',
-            time: '30分钟',
-            critical: false
+            name: '网络研究',
+            description: '搜索相关资料，支持MCP或WebSearch',
+            time: '3-5分钟',
+            critical: false,
+            tool: 'web-research'
           },
           {
             step: 3,
-            name: '选题讨论',
-            description: '提供3-4个选题选项，等待用户选择 ⭐',
-            time: '15分钟',
-            critical: true,
-            note: '此步骤不能跳过'
+            name: '生成多选题',
+            description: '基于研究结果生成3-4个选题方向',
+            time: '2分钟',
+            critical: false,
+            tool: 'generate-topics'
           },
           {
             step: 4,
-            name: '协作文档创建',
-            description: '如需实验/配图，创建任务清单',
-            time: '10分钟',
-            critical: false,
-            optional: true
-          },
-          {
-            step: 5,
-            name: '学习个人风格',
-            description: '读取 /4_personal_corpus/ 风格文件',
-            time: '10分钟',
+            name: '选择选题',
+            description: '自动选择第一个选题（或等待用户选择）',
+            time: '1分钟',
             critical: false
           },
           {
-            step: 6,
-            name: '调用个人素材库 ⭐',
-            description: '搜索匹配的真实案例和数据（必须使用）',
-            time: '10分钟',
+            step: 5,
+            name: '搜索个人素材',
+            description: '从个人素材库搜索相关观点、经历、案例',
+            time: '2分钟',
             critical: true,
-            note: '此步骤不能跳过，素材调用率必须≥80%'
+            note: '素材调用率必须≥80%',
+            tool: 'manage-corpus'
+          },
+          {
+            step: 6,
+            name: '创建写作Brief',
+            description: '结构化写作需求，生成标准化Brief',
+            time: '2分钟',
+            critical: false,
+            tool: 'create-brief'
           },
           {
             step: 7,
-            name: '生成初稿',
-            description: '结合所有资料撰写初稿',
-            time: '90分钟',
+            name: '生成文章内容',
+            description: '结合Brief、素材、研究资料生成初稿',
+            time: '5-10分钟',
             critical: false
           },
           {
             step: 8,
             name: '四遍审校',
-            description: '逻辑→风格→细节→流畅度，逐步优化 ⭐',
-            time: '75分钟',
-            critical: true
+            description: '内容逻辑→风格语气→细节格式→流畅度 ⭐',
+            time: '5-10分钟',
+            critical: true,
+            tool: 'review-article'
           },
           {
             step: 9,
             name: '流畅度优化',
-            description: '段落过渡、句子拆分、节奏调整',
-            time: '30分钟',
-            critical: true
+            description: '段落过渡、句子拆分、节奏调整 ⭐',
+            time: '3-5分钟',
+            critical: true,
+            tool: 'fluency-optimizer'
           },
           {
             step: 10,
-            name: '配图与成稿输出',
-            description: '生成配图需求，输出最终成稿',
-            time: '30分钟',
+            name: '生成质量报告',
+            description: '分析素材使用率、AI味指数、流畅度等',
+            time: '1分钟',
             critical: false,
-            optional: true
+            tool: 'generate-report'
           }
         ],
-        total_time: '3.5-4.5小时',
-        fast_track_time: '2.5-3小时',
-        quality_gate: ['选题确认', '四遍审校完成', '流畅度≥4.0'],
+        total_time: '25-40分钟',
+        fast_track_time: '20-30分钟',
+        quality_gate: ['素材调用率≥80%', '四遍审校完成', '流畅度≥4.0'],
         output_files: [
           '/5_briefs/brief_*.md',
           '/3_knowledge_base/summary_*.md',
@@ -491,29 +504,29 @@ async function executeAutoNewArticleWorkflow(params: {
   try {
     // 步骤1: 自动初始化工作区
     utils.logger.info('📁 步骤1/9: 初始化工作区...');
-    const workspace = await import('./init-workspace').then(m => m.initWorkspaceTool.handler({
+    const workspace = await initWorkspaceTool.handler({
       workspace_type
-    }, utils));
+    }, utils);
     executionLog.steps_completed.push({ step: 1, name: 'init-workspace', status: 'completed' });
 
     // 步骤2: 自动网络研究
     utils.logger.info('🔍 步骤2/9: 执行网络研究...');
     const researchQueries = generateResearchQueries(topic);
-    const research = await import('./web-research').then(m => m.webResearchTool.handler({
+    const research = await webResearchTool.handler({
       research_topic: topic,
       research_queries: researchQueries,
       source_types: ['technical_docs', 'case_studies', 'research_papers'],
       save_to_corpus: true
-    }, utils));
+    }, utils);
     executionLog.steps_completed.push({ step: 2, name: 'web-research', status: 'completed' });
 
     // 步骤3: 自动生成选题
     utils.logger.info('💡 步骤3/9: 生成多选题方向...');
-    const topics = await import('./generate-topics').then(m => m.generateTopicsTool.handler({
+    const topics = await generateTopicsTool.handler({
       main_topic: topic,
       target_audience,
       output_count: 4
-    }, utils));
+    }, utils);
     executionLog.steps_completed.push({ step: 3, name: 'generate-topics', status: 'completed' });
 
     // 步骤4: 自动选择第一个选题（或让用户选择）
@@ -522,22 +535,22 @@ async function executeAutoNewArticleWorkflow(params: {
 
     // 步骤5: 自动搜索个人素材
     utils.logger.info('📚 步骤4/9: 搜索个人素材库...');
-    const materials = await import('./manage-corpus').then(m => m.manageCorpusTool.handler({
+    const materials = await manageCorpusTool.handler({
       action: 'search',
       keywords: topic,
       material_type: '观点'
-    }, utils));
+    }, utils);
     executionLog.steps_completed.push({ step: 4, name: 'manage-corpus', status: 'completed' });
 
     // 步骤6: 自动创建Brief
     utils.logger.info('📋 步骤5/9: 创建写作Brief...');
-    const brief = await import('./create-brief').then(m => m.createBriefTool.handler({
+    const brief = await createBriefTool.handler({
       topic: selectedTopic.title,
       target_audience,
       word_count: 3000,
       key_points: selectedTopic.key_points || [],
       key_questions: selectedTopic.key_questions || []
-    }, utils));
+    }, utils);
     executionLog.steps_completed.push({ step: 5, name: 'create-brief', status: 'completed' });
 
     // 步骤7: 执行内部写作逻辑
@@ -553,27 +566,27 @@ async function executeAutoNewArticleWorkflow(params: {
 
     // 步骤8: 自动四遍审校
     utils.logger.info('🔍 步骤7/9: 执行四遍审校...');
-    const review = await import('./review-article').then(m => m.reviewArticleTool.handler({
+    const review = await reviewArticleTool.handler({
       article_content: articleContent,
       review_level: 'standard'
-    }, utils));
+    }, utils);
     executionLog.steps_completed.push({ step: 7, name: 'review-article', status: 'completed' });
 
     // 步骤9: 自动流畅度优化
     utils.logger.info('✨ 步骤8/9: 优化文章流畅度...');
-    const fluency = await import('./fluency-optimizer').then(m => m.fluencyOptimizerTool.handler({
+    const fluency = await fluencyOptimizerTool.handler({
       article_content: review.optimized_content,
       optimization_level: 'standard',
       target_audience
-    }, utils));
+    }, utils);
     executionLog.steps_completed.push({ step: 8, name: 'fluency-optimizer', status: 'completed' });
 
     // 步骤10: 自动生成报告
     utils.logger.info('📊 步骤9/9: 生成质量报告...');
-    const report = await import('./generate-report').then(m => m.generateReportTool.handler({
+    const report = await generateReportTool.handler({
       report_type: 'quality-metrics',
       article_topic: topic
-    }, utils));
+    }, utils);
     executionLog.steps_completed.push({ step: 9, name: 'generate-report', status: 'completed' });
 
     executionLog.end_time = new Date().toISOString();

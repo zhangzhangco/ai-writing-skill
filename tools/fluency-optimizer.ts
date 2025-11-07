@@ -371,4 +371,4 @@ export const fluencyOptimizerTool: Tool = {
   }
 };
 
-export default fluencyOptimizerTool;
+// 注意：fluency-optimizer使用export const方式导出
