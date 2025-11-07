@@ -2,7 +2,7 @@
 
 # ai-writing-skill 一键安装脚本
 # 使用方法: curl -fsSL https://raw.githubusercontent.com/zhangzhangco/ai-writing-skill/main/install.sh | bash
-# 强制覆盖: curl -fsSL https://raw.githubusercontent.com/zhangzhangco/ai-writing-skill/main/install.sh | FORCE_OVERWRITE=1 bash
+# 强制覆盖: curl -fsSL https://raw.githubusercontent.com/zhangzhangco/ai-writing-skill/main/install.sh | bash -s force
 
 set -e
 
@@ -34,9 +34,9 @@ print_info() {
     echo -e "${YELLOW}ℹ️  $1${NC}"
 }
 
-# 检查强制覆盖变量
+# 检查参数 - 使用bash -s传递
 FORCE_OVERWRITE=false
-if [[ "$FORCE_OVERWRITE" == "1" ]] || [[ "$FORCE_OVERWRITE" == "true" ]]; then
+if [[ "$1" == "force" ]]; then
     FORCE_OVERWRITE=true
 fi
 
@@ -72,10 +72,11 @@ if [ -d "$SKILL_DIR" ]; then
         print_success "旧版本已删除"
     else
         print_info "检测到已存在的 Skill 目录"
+        # 非强制模式，尝试非交互检测
         print_info "跳过安装"
         print_info ""
         print_info "如需覆盖安装，请使用以下命令："
-        echo -e "  ${YELLOW}curl -fsSL https://raw.githubusercontent.com/zhangzhangco/ai-writing-skill/main/install.sh | FORCE_OVERWRITE=1 bash${NC}"
+        echo -e "  ${YELLOW}curl -fsSL https://raw.githubusercontent.com/zhangzhangco/ai-writing-skill/main/install.sh | bash -s force${NC}"
         exit 0
     fi
 fi
